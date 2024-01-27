@@ -1,0 +1,198 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In and Sign Up Form</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/ddf2884355.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="form-box">
+            <h1 id="title">Sign Up</h1>
+            <form >
+                <div class="input-group">
+                    <div class="input-field" id="nameField">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" id="name" placeholder="Full Name">
+                    </div>
+
+                    <div class="input-field" id="emailField">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" id="email" placeholder="Email">
+                    </div>
+                    <div class="input-field">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <input type="text" id="username" placeholder="Username">
+                    </div>
+
+                    <div class="input-field">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="password" placeholder="Password">
+                    </div>
+                    <p>Lost password <a href="#">Click Here!</a></p>
+                </div>
+
+                <div class="btn-field">
+                    <button type="button" id="signupBtn" >Sign Up</button>
+                    <button type="button" id="signinBtn" class="disable">Sign In</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+   
+
+<script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+   // import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCdSDPrzD0-RntYCXWHCEnFvy2O7hRsd4Q",
+      authDomain: "login-app-60b8d.firebaseapp.com",
+      databaseURL: "https://login-app-60b8d-default-rtdb.firebaseio.com",
+      projectId: "login-app-60b8d",
+      storageBucket: "login-app-60b8d.appspot.com",
+      messagingSenderId: "1063787006450",
+      appId: "1:1063787006450:web:13a87f21acf0f80e8dc36b",
+      measurementId: "G-Y37KPK8NSZ"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    //const analytics = getAnalytics(app);
+    import { getDatabase, ref, set, child, get} 
+                from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const db = getDatabase();
+
+
+        // ----- the reference ------
+        const name = document.getElementById('name');
+        const email = document.getElementById('email');
+        const username = document.getElementById('username')
+        const pass = document.getElementById('password');
+
+
+        // ---- validation ------\.(gmail|yahoo|outlook)\.com
+        function Validation(){
+        let nameregex = /^[a-zA-Z\s]+$/;
+        let emailregex = /^[a-zA-Z0-9]+@(gmail|yahoo|outlook)\.com$/;
+        let passregex = /^[a-zA-Z0-9]{5,}$/;
+
+        if(!nameregex.test(name.value)){
+            alert("the name should only contain alphabets!")
+            return false;
+        }
+        if(!emailregex.test(email.value)){
+            alert("the email is wrong(should be gmail, yahoo or outlook)!")
+            return false;
+        }
+        if(!passregex.test(pass.value)){
+            alert("the password should have characters more than 5!")
+            return false;
+        }
+
+
+        return true;
+    }
+
+    // ---------- register ----------------
+
+    function RegisterUser(){
+        if(!Validation()){
+            return;
+        }
+        else{
+        const dbRef = ref(db);
+
+        get(child(dbRef, "UsersList/" + username.value)).then((snapshot)=>{
+            if(snapshot.exists()){
+                alert("Account Already Exists!");
+            }
+            else{
+                set(ref(db, "UsersList/"+username.value),
+                {
+                    full_name : name.value,
+                    email : email.value,
+                    username: username.value,
+                    password: pass.value
+                })
+                .then(()=>{
+                    alert("User added successfully!")
+                })
+                .catch((error)=>{
+                    alert("Error. User could not be added. Try Again!")
+                })
+            }
+        })
+    }
+
+}
+
+// ----------- authenticate user------------------
+function AuthenticateUser(){
+    const dbRef = ref(db);
+    get(child(dbRef, "UsersList/" + username.value )).then((snapshot)=>{
+            if(snapshot.exists()){
+               if(snapshot.val().password == pass.value){
+                Login(snapshot.val());
+               // alert("yey, logged in "+ snapshot.val().username)
+               }
+               else{
+                alert("User does not exist")
+               }
+            }
+            else{
+                alert("Username or password is invalid")
+            }
+        });
+}
+
+function Login(user){
+    alert("Welcome "+user.full_name);
+    window.location.href = "checkout.html";
+    // localStorage.setItem('user', JSON.stringify(user));
+    // localStorage.setItem('user', JSON.stringify(user));
+    // window.location = "index.html"
+
+
+}
+
+function encPass(){
+    var pass12 = CryptoJS.AES.encrypt(pass.value, pass.vlaue);
+    return pass12.toString();
+}
+
+    //------------add event listners------------------
+        let signupBtn = document.getElementById("signupBtn")
+        let signinBtn = document.getElementById("signinBtn")
+        let nameField = document.getElementById("nameField")
+        let emailField = document.getElementById("emailField");
+        let title = document.getElementById("title")
+
+
+        signinBtn.onclick = function(){
+            nameField.style.maxHeight = "0";
+            emailField.style.maxHeight = "0";
+            title.innerHTML = "Sign In"
+            signupBtn.classList.add("disable")
+            signinBtn.classList.remove("disable")
+            AuthenticateUser();
+        }
+
+        signupBtn.onclick = function(){
+            nameField.style.maxHeight = "60px";
+            emailField.style.maxHeight = "60px";
+            title.innerHTML = "Sign Up"
+            signupBtn.classList.remove("disable")
+            signinBtn.classList.add("disable")
+            RegisterUser();
+        }
+
+
+  </script>
+</body>
+</html>
